@@ -2,133 +2,126 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weather App - Easy Tutorials</title>
-    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather App</title>
+    <!-- Tailwind CSS for utility-first styling -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Axios for easy HTTP requests -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 
-<body>
-    <div class="card">
-        <div class="search">
-            <input type="text" placeholder="enter city name" spellcheck="false">
-            <button><img src="images/search.png" alt="search"></button>
+<!-- Body: center content vertically and horizontally, dark background -->
+
+<body class="bg-gray-800 text-white flex items-center justify-center min-h-screen">
+
+    <!-- Main card container: gradient background, rounded corners, padding -->
+    <div
+        class="w-11/12 max-w-md mt-24 bg-gradient-to-br from-[#00feba] to-[#5b548a] text-white mx-auto rounded-[20px] p-[40px_35px] text-center transition transform duration-[1000ms] ease-in-out hover:scale-125">
+
+        <!-- Search Bar: input and button side by side -->
+        <div class="flex mb-6">
+            <!-- Text input for city name -->
+            <input id="cityInput" type="text" placeholder="Enter city name"
+                class="flex-1 px-4 py-3 bg-white/20 placeholder-gray-600 text-white rounded focus:outline-none" />
+            <!-- Search button: when clicked, fetch weather -->
+            <button id="searchBtn" class="  px-4 bg-white/30 hover:bg-white/20 transition text-gray-900 rounded-r-full">
+                🔍
+            </button>
         </div>
-        <div class="error">
-            <p>Invalid city name</p>
-        </div>
-        <div class="weather">
-            <img src="images/rain.png" alt="rain" class="weather-icon">
-            <h1 class="temp">22°c</h1>
-            <h2 class="city">New York</h2>
-            <div class="details">
-                <div class="col">
-                    <img src="images/humidity.png">
-                    <div>
-                        <p class="humidity">50%</p>
-                        <p>Humidity</p>
+
+        <!-- Error message: hidden by default, shows when city not found -->
+        <p id="errorMsg" class="text-red-600 mb-4 hidden">City not found</p>
+
+        <!-- Weather info: hidden until valid data loads -->
+        <div id="weatherInfo" class="space-y-4 hidden">
+            <!-- Weather icon image -->
+            <img id="weatherIcon" src="" alt="Weather icon" class="mx-auto w-24 h-24 " />
+            <!-- Temperature display -->
+            <h1 id="temp" class="text-5xl font-bold text-purple-200"></h1>
+            <!-- City name display -->
+            <h2 id="cityName" class="text-2xl"></h2>
+            <!-- Humidity and Wind speed side by side -->
+            <div class="flex justify-center space-x-8 mt-4">
+                <!-- Humidity block -->
+                <div class="flex items-center">
+                    <img src="images/humidity.png" alt="humidity icon" class="w-10 h-10 mr-2" />
+                    <div class="text-left">
+                        <p id="humidity" class="text-xl font-semibold"></p>
+                        <p class="text-sm">Humidity</p>
                     </div>
                 </div>
-                <div class="col">
-                    <img src="images/wind.png">
-                    <div>
-                        <p class="wind">15 Km/h</p>
-                        <p>Wind Speed</p>
+                <!-- Wind speed block -->
+                <div class="flex items-center">
+                    <img src="images/wind.png" alt="wind icon" class="w-10 h-10 mr-2" />
+                    <div class="text-left">
+                        <p id="wind" class="text-xl font-semibold"></p>
+                        <p class="text-sm">Wind Speed</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
     <script>
-        const apiKey = "8543d3988c7174bf25b241b99f22691d";
-        const apiUrl = "https://api.openweathermap.org/data/2.5/weather?units=metric&q=";
+        // Select elements by ID
+        const cityInput = document.getElementById('cityInput');   // input box
+        const searchBtn = document.getElementById('searchBtn');   // button
+        const errorMsg = document.getElementById('errorMsg');     // error text
+        const weatherInfo = document.getElementById('weatherInfo'); // container for weather details
+        const weatherIcon = document.getElementById('weatherIcon'); // icon image
+        const tempField = document.getElementById('temp');        // temperature heading
+        const cityNameField = document.getElementById('cityName'); // city name heading
+        const humidityField = document.getElementById('humidity'); // humidity value
+        const windField = document.getElementById('wind');        // wind speed value
 
-        const searchBox = document.querySelector(".search input")
-        const searchBtn = document.querySelector(".search button")
-        const weatherIcom = document.querySelector(".weather-icon")
+        // API setup
+        const apiKey = '8543d3988c7174bf25b241b99f22691d';
+        const apiUrl = 'https://api.openweathermap.org/data/2.5/weather?units=metric&q=';
 
-        async function checkWeather(city) {
-            const response = await fetch(apiUrl + city + `&appid=${apiKey}`);
-            if (response.status == 404) {
-                document.querySelector(".error").style.display = "block"
-                document.querySelector(".weather").style.display = "none"
+        /**
+         * Fetch and display weather data for a given city
+         * @param {string} city - Name of the city to look up
+         */
+        // Main function to show weather using axios.get
 
-            } else {
-                var data = await response.json();
-                console.log(data);
-                document.querySelector(".city").innerHTML = data.name;
-                document.querySelector(".temp").innerHTML = Math.round(data.main.temp) + "°c";
-                document.querySelector(".humidity").innerHTML = data.main.humidity + "%";
-                document.querySelector(".wind").innerHTML = data.wind.speed + " Km/h";
+        async function showWeather(city) {
+            try {
+                // Send HTTP GET request via axios
+                const res = await axios.get(apiUrl + city + `&appid=${apiKey}`);
+                const data = res.data; // extracted JSON data
 
-                /*
+                // Hide error message if visible
+                errorMsg.classList.add('hidden');
+                // Show the weather info section
+                weatherInfo.classList.remove('hidden');
 
+                // Update UI with received data
+                cityNameField.textContent = data.name;                              // display city
+                tempField.textContent = Math.round(data.main.temp) + '°C';          // display rounded temp
+                humidityField.textContent = data.main.humidity + '%';               // show humidity
+                windField.textContent = data.wind.speed + ' km/h';                  // show wind speed
 
-*************************************** Suggestions****************************************************************
+                // Determine which icon to use based on weather condition
+                // data.weather[0].main gives e.g. 'Clouds', 'Clear', 'Rain', etc.
+                const condition = data.weather[0].main.toLowerCase();
+                weatherIcon.src = `images/${condition}.png`;                        // set icon image path
 
-         1. you dont need all those if statements to change the icon based on condition, you can try this instead:
-            let weatherCondition = data.weather[0].main.toLowerCase();
-             weatherIcon.src = `images/${weatherCondition}.png`;
-
-        2. in place of if else if statements to select images we can also write ->  
-           document.querySelector(".weather-icon").setAttribute("src","images/"+data.weather[0].main+".png");
-
-        3. Nice - There is an even easier way to do it by setting the src  property directly:  
-             document.querySelector(".weather-icon").src = "images/"+data.weather[0].main+".png"
-
-        4. why use
-            if (data.weather[0].main == 'Clouds') {
-            weatherIcon.src = 'images/clouds.png'
-             } else if (data.weather[0].main == 'Clear') {
-             ...
-             }
-           instead of 
-
-            weatherIcon.src = `....images/${data.weather[0].main}.png`;
-Remember to rename the first letter of each image you are going to use. 
-
-        5. I replaced if else statements for weather types with this simple line:
-             weatherIcon.src=`IMGs/${data.weather[0].main}.png`;
-            Just need to rename images to data.weather[0].main values
-    
-
-                    */
-
-                if (data.weather[0].main == "Clouds") {
-                    weatherIcom.src = "images/clouds.png"
-                }
-                else if (data.weather[0].main == "Clouds") {
-                    weatherIcom.src = "images/clouds.png"
-
-                }
-                else if (data.weather[0].main == "Clear") {
-                    weatherIcom.src = "images/clear.png"
-
-                }
-                else if (data.weather[0].main == "Rain") {
-                    weatherIcom.src = "images/rain.png"
-
-                }
-                else if (data.weather[0].main == "Drizzle") {
-                    weatherIcom.src = "images/drizzle.png"
-
-                }
-                else if (data.weather[0].main == "Mist") {
-                    weatherIcom.src = "images/mist.png"
-
-                }
-
-
-
-                document.querySelector(".weather").style.display = "block";
-                document.querySelector(".error").style.display = "none"
-
+            } catch (error) {
+                // On any error (e.g. city not found), display error message
+                errorMsg.classList.remove('hidden');  // show "City not found"
+                weatherInfo.classList.add('hidden'); // hide weather info
+                console.log('Error fetching weather:', error); // log for debugging
             }
         }
-        searchBtn.addEventListener("click", () => {
-            checkWeather(searchBox.value);
-        })
 
+        // Attach click event to the search button
+        searchBtn.addEventListener('click', () => {
+            const city = cityInput.value.trim(); // get city name and remove spaces
+            if (city) {                         // only proceed if not empty
+                showWeather(city);                // call function to fetch and display
+            }
+        });
     </script>
 </body>
 
