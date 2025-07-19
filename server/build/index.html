@@ -60,6 +60,40 @@
                 document.querySelector(".temp").innerHTML = Math.round(data.main.temp) + "°c";
                 document.querySelector(".humidity").innerHTML = data.main.humidity + "%";
                 document.querySelector(".wind").innerHTML = data.wind.speed + " Km/h";
+
+                /*
+
+
+*************************************** Suggestions****************************************************************
+
+         1. you dont need all those if statements to change the icon based on condition, you can try this instead:
+            let weatherCondition = data.weather[0].main.toLowerCase();
+             weatherIcon.src = `images/${weatherCondition}.png`;
+
+        2. in place of if else if statements to select images we can also write ->  
+           document.querySelector(".weather-icon").setAttribute("src","images/"+data.weather[0].main+".png");
+
+        3. Nice - There is an even easier way to do it by setting the src  property directly:  
+             document.querySelector(".weather-icon").src = "images/"+data.weather[0].main+".png"
+
+        4. why use
+            if (data.weather[0].main == 'Clouds') {
+            weatherIcon.src = 'images/clouds.png'
+             } else if (data.weather[0].main == 'Clear') {
+             ...
+             }
+           instead of 
+
+            weatherIcon.src = `....images/${data.weather[0].main}.png`;
+Remember to rename the first letter of each image you are going to use. 
+
+        5. I replaced if else statements for weather types with this simple line:
+             weatherIcon.src=`IMGs/${data.weather[0].main}.png`;
+            Just need to rename images to data.weather[0].main values
+    
+
+                    */
+
                 if (data.weather[0].main == "Clouds") {
                     weatherIcom.src = "images/clouds.png"
                 }
